@@ -8,7 +8,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>21</maven.compiler.release>
-        <exec.mainClass>com.gustavonascimento.sistema.cadastro.SistemaCadastro</exec.mainClass>
+        <exec.mainClass>com.gustavonascimento.sistema.cadastro.Main</exec.mainClass>
     </properties>
     
     <dependencies>
@@ -24,6 +24,13 @@
         <groupId>com.zaxxer</groupId>
         <artifactId>HikariCP</artifactId>
         <version>5.1.0</version>
+    </dependency>
+    
+     <!-- UI -->
+     <dependency>
+        <groupId>com.formdev</groupId>
+        <artifactId>flatlaf</artifactId>
+        <version>3.5.4</version>
     </dependency>
 </dependencies>
 </project>
