@@ -1,0 +1,30 @@
+# Maven
+target/
+dependency-reduced-pom.xml
+
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+build/
+
+# Compilados
+*.class
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Configurações locais
+db.properties
+*.env
+
+# Logs gerados pela aplicação
+logs/
+*.log
+
+# Sistema operacional
+Thumbs.db
+.DS_Store
