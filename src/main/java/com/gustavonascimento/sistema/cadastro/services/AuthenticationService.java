@@ -64,4 +64,10 @@ public class AuthenticationService {
         return user;
     }
     
+    public void logout(User user) {
+        if (user != null) {
+            auditLogService.log(user.getId(), AuditAction.LOGOUT, null);
+        }
+    }
+    
 }
