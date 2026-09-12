@@ -5,6 +5,7 @@
 package com.gustavonascimento.sistema.cadastro.views;
 
 import com.gustavonascimento.sistema.cadastro.controllers.EmployeeController;
+import com.gustavonascimento.sistema.cadastro.controllers.SessionController;
 import com.gustavonascimento.sistema.cadastro.models.Employee;
 import com.gustavonascimento.sistema.cadastro.session.UserSession;
 import com.gustavonascimento.sistema.cadastro.views.table.EmployeeTableModel;
@@ -32,6 +33,10 @@ public class EmployeeView extends JFrame {
     private final JButton editButton = new JButton("Editar");
     private final JButton deleteButton = new JButton("Excluir");
     private final JButton cancelButton = new JButton("Cancelar");
+    
+    private final JLabel userLabel = new JLabel();
+    private final JButton logoutButton = new JButton("Sair");
+    private final SessionController sessionController = new SessionController();
 
     private Long editingEmployeeId = null;
 
@@ -72,7 +77,7 @@ public class EmployeeView extends JFrame {
 
         registerButton.addActionListener(e -> onRegisterClicked());
 
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
         setSize(700, 600);
         setLocationRelativeTo(null);
 
@@ -90,8 +95,12 @@ public class EmployeeView extends JFrame {
         JPanel root = new JPanel(new BorderLayout(0, 16));
         root.setBorder(new EmptyBorder(24, 24, 24, 24));
 
-        root.add(buildFormPanel(), BorderLayout.NORTH);
-        root.add(buildTablePanel(), BorderLayout.CENTER);
+        root.add(buildTopBar(), BorderLayout.NORTH);
+
+        JPanel content = new JPanel(new BorderLayout(0, 16));
+        content.add(buildFormPanel(), BorderLayout.NORTH);
+        content.add(buildTablePanel(), BorderLayout.CENTER);
+        root.add(content, BorderLayout.CENTER);
 
         setContentPane(root);
     }
@@ -294,6 +303,46 @@ public class EmployeeView extends JFrame {
 
         if (confirmacao == JOptionPane.YES_OPTION) {
             controller.delete(employee.getId());
+        }
+    }
+    
+    private JPanel buildTopBar() {
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setBorder(new EmptyBorder(0, 0, 12, 0));
+
+        String userName = UserSession.getInstance().isLoggedIn()
+                ? UserSession.getInstance().getCurrentUser().getName()
+                : "—";
+        userLabel.setText("Logado como: " + userName);
+        userLabel.setFont(userLabel.getFont().deriveFont(Font.PLAIN, 13f));
+        userLabel.setForeground(Color.GRAY);
+        topBar.add(userLabel, BorderLayout.WEST);
+
+        logoutButton.setBorderPainted(false);
+        logoutButton.setContentAreaFilled(false);
+        logoutButton.setForeground(new Color(0xDC2626));
+        logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutButton.addActionListener(e -> onLogoutClicked());
+        topBar.add(logoutButton, BorderLayout.EAST);
+
+        return topBar;
+    }
+    
+    private void onLogoutClicked() {
+        int confirmacao = JOptionPane.showConfirmDialog(this,
+                "Deseja realmente sair?",
+                "Confirmar saída",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (confirmacao == JOptionPane.YES_OPTION) {
+            setFormEnabled(false);
+            logoutButton.setEnabled(false);
+
+            sessionController.logout(() -> {
+                new LoginView().setVisible(true);
+                dispose();
+            });
         }
     }
     
