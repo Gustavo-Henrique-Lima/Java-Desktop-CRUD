@@ -9,12 +9,16 @@ import com.gustavonascimento.sistema.cadastro.exceptions.PersistenciaException;
 import com.gustavonascimento.sistema.cadastro.infra.ConnectionFactory;
 import com.gustavonascimento.sistema.cadastro.models.User;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+
 import java.util.Optional;
 
 /**
@@ -22,6 +26,8 @@ import java.util.Optional;
  * @author Gustavo
  */
 public class UserDAOIMP implements UserDAOInterface {
+    
+    private static final Logger logger = LoggerFactory.getLogger(UserDAOIMP.class);
     
     private static final String SQL_INSERT =
             "INSERT INTO tb_users (name, email, password_hash, salt) VALUES (?, ?, ?, ?)";
@@ -52,8 +58,10 @@ public class UserDAOIMP implements UserDAOInterface {
 
         } catch (SQLException e) {
             if ("23505".equals(e.getSQLState())) {
+                logger.warn("Tentativa de cadastro com e-mail já existente: {}", user.getEmail());
                 throw new PersistenciaException("Este e-mail já está cadastrado.", e);
             }
+            logger.error("Erro ao salvar usuário", e);
             throw new PersistenciaException("Não foi possível salvar o usuário no momento.", e);
         }
     }
@@ -73,6 +81,7 @@ public class UserDAOIMP implements UserDAOInterface {
             }
 
         } catch (SQLException e) {
+            logger.error("Erro ao buscar usuário por e-mail", e);
             throw new PersistenciaException("Não foi possível consultar o usuário.", e);
         }
     }
@@ -88,6 +97,7 @@ public class UserDAOIMP implements UserDAOInterface {
             }
 
         } catch (SQLException e) {
+            logger.error("Erro ao verificar existência de e-mail", e);
             throw new PersistenciaException("Não foi possível validar o e-mail.", e);
         }
     }
@@ -103,6 +113,7 @@ public class UserDAOIMP implements UserDAOInterface {
         if (ts != null) {
             user.setCreatedAt(ts.toLocalDateTime());
         }
+        logger.info("Usuário convertido com sucesso");
         return user;
     }
 }

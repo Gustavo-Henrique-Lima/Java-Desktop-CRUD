@@ -10,6 +10,7 @@ import com.gustavonascimento.sistema.cadastro.exceptions.PersistenciaException;
 import com.gustavonascimento.sistema.cadastro.exceptions.ValidacaoException;
 import com.gustavonascimento.sistema.cadastro.infra.PasswordHasher;
 import com.gustavonascimento.sistema.cadastro.models.User;
+import com.gustavonascimento.sistema.cadastro.models.enums.AuditAction;
 import com.gustavonascimento.sistema.cadastro.utils.Validators;
 
 
@@ -20,13 +21,15 @@ import com.gustavonascimento.sistema.cadastro.utils.Validators;
 public class UserService {
 
     private final UserDAOInterface userDAO;
+    private final AuditLogService auditLogService;
 
     public UserService() {
-        this.userDAO = new UserDAOIMP();
+        this(new UserDAOIMP(), new AuditLogService());
     }
 
-    public UserService(UserDAOInterface userDao) {
-        this.userDAO = userDao;
+    public UserService(UserDAOInterface userDAO, AuditLogService auditLogService) {
+        this.userDAO = userDAO;
+        this.auditLogService = auditLogService;
     }
 
     public User save(String name, String email, String password)
@@ -37,6 +40,8 @@ public class UserService {
         Validators.validPassword(password);
 
         if (userDAO.emailExists(email)) {
+            auditLogService.log(null, AuditAction.USER_REGISTERED_FAILURE,
+                "Tentativa de cadastro com e-mail já cadastrado " + email);
             throw new ValidacaoException("Este e-mail já está cadastrado.");
         }
 
@@ -44,6 +49,10 @@ public class UserService {
         String passwordHash = PasswordHasher.hash(password, salt);
 
         User user = new User(name.trim(), email.trim().toLowerCase(), passwordHash, salt);
+        
+        auditLogService.log(user.getId(), AuditAction.USER_REGISTERED_SUCESS,
+                "Usuário cadastrado: " + user.getEmail());
+                
         return userDAO.save(user);
     }
     

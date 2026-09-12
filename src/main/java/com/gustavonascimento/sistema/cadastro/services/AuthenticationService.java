@@ -10,6 +10,7 @@ import com.gustavonascimento.sistema.cadastro.exceptions.PersistenciaException;
 import com.gustavonascimento.sistema.cadastro.exceptions.ValidacaoException;
 import com.gustavonascimento.sistema.cadastro.infra.PasswordHasher;
 import com.gustavonascimento.sistema.cadastro.models.User;
+import com.gustavonascimento.sistema.cadastro.models.enums.AuditAction;
 
 import java.util.Optional;
 
@@ -20,13 +21,15 @@ import java.util.Optional;
 public class AuthenticationService {
     
      private final UserDAOInterface userDAO;
+     private final AuditLogService auditLogService;
 
     public AuthenticationService() {
-        this.userDAO = new UserDAOIMP();
+        this(new UserDAOIMP(), new AuditLogService());
     }
 
-    public AuthenticationService(UserDAOInterface userDAO) {
+    public AuthenticationService(UserDAOInterface userDAO, AuditLogService auditLogService) {
         this.userDAO = userDAO;
+        this.auditLogService = auditLogService;
     }
 
     public User authenticate(String email, String password)
@@ -42,6 +45,8 @@ public class AuthenticationService {
                 new ValidacaoException("E-mail ou senha inválidos.");
 
         if (userOpt.isEmpty()) {
+            auditLogService.log(null, AuditAction.LOGIN_FAILURE,
+                "Tentativa de login com e-mail inexistente: " + email);
             throw credenciaisInvalidas;
         }
 
@@ -50,9 +55,12 @@ public class AuthenticationService {
                 password, user.getSalt(), user.getPasswordHash());
 
         if (!correctPassword) {
+            auditLogService.log(user.getId(), AuditAction.LOGIN_FAILURE,
+                "Senha incorreta");
             throw credenciaisInvalidas;
         }
 
+        auditLogService.log(user.getId(), AuditAction.LOGIN_SUCCESS, null);
         return user;
     }
     
