@@ -122,6 +122,7 @@ public class LoginView extends JFrame {
                 "Bem-vindo(a), " + user.getName() + "!",
                 "Login realizado",
                 JOptionPane.INFORMATION_MESSAGE);
+        new EmployeeView().setVisible(true);
         dispose();
     }
     

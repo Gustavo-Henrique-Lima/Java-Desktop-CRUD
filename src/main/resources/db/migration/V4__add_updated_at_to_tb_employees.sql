@@ -1,0 +1,1 @@
+ALTER TABLE tb_employees ADD COLUMN updated_at TIMESTAMP;

@@ -8,6 +8,7 @@ import com.gustavonascimento.sistema.cadastro.exceptions.PersistenciaException;
 import com.gustavonascimento.sistema.cadastro.exceptions.ValidacaoException;
 import com.gustavonascimento.sistema.cadastro.models.User;
 import com.gustavonascimento.sistema.cadastro.services.AuthenticationService;
+import com.gustavonascimento.sistema.cadastro.session.UserSession;
 import com.gustavonascimento.sistema.cadastro.views.LoginView;
 
 import javax.swing.SwingWorker;
@@ -61,6 +62,7 @@ public class LoginController {
 
                 try {
                     User user = get();
+                    UserSession.getInstance().login(user);
                     view.onLoginSuccess(user);
                 } catch (Exception e) {
                     view.showError("Não foi possível concluir o login no momento.");
