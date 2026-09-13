@@ -18,6 +18,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.TableRowSorter;
 
 /**
  *
@@ -44,6 +47,11 @@ public class EmployeeView extends JFrame {
     private final JTable employeeTable = new JTable(tableModel);
 
     private final EmployeeController controller;
+    
+    private final JTextField searchField = new JTextField();
+    private final JComboBox<String> statusFilterCombo =
+            new JComboBox<>(new String[]{"Todos", "Ativo", "Inativo"});
+    private TableRowSorter<EmployeeTableModel> tableSorter;
 
     public EmployeeView() {
         super("Cadastro de Funcionários");
@@ -74,15 +82,26 @@ public class EmployeeView extends JFrame {
                 deleteButton.setEnabled(hasSelection);
             }
         });
+        
+        tableSorter = new TableRowSorter<>(tableModel);
+        employeeTable.setRowSorter(tableSorter);
 
-        registerButton.addActionListener(e -> onRegisterClicked());
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { applyFilter(); }
+            @Override public void removeUpdate(DocumentEvent e) { applyFilter(); }
+            @Override public void changedUpdate(DocumentEvent e) { applyFilter(); }
+        });
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
-        setSize(700, 600);
-        setLocationRelativeTo(null);
+        statusFilterCombo.addActionListener(e -> applyFilter());
 
-        controller.loadEmployees();
-    }
+                registerButton.addActionListener(e -> onRegisterClicked());
+
+                setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+                setSize(700, 600);
+                setLocationRelativeTo(null);
+
+                controller.loadEmployees();
+            }
 
     private JSpinner criarSpinnerDeData() {
         SpinnerDateModel dateModel = new SpinnerDateModel();
@@ -164,10 +183,21 @@ public class EmployeeView extends JFrame {
     private JPanel buildTablePanel() {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
 
+        JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        searchField.setPreferredSize(new Dimension(220, 28));
+        filterRow.add(new JLabel("Buscar:"));
+        filterRow.add(searchField);
+        filterRow.add(new JLabel("Status:"));
+        filterRow.add(statusFilterCombo);
+
         JPanel actionsRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
         actionsRow.add(editButton);
         actionsRow.add(deleteButton);
-        panel.add(actionsRow, BorderLayout.NORTH);
+
+        JPanel topSection = new JPanel(new BorderLayout());
+        topSection.add(filterRow, BorderLayout.NORTH);
+        topSection.add(actionsRow, BorderLayout.SOUTH);
+        panel.add(topSection, BorderLayout.NORTH);
 
         employeeTable.setRowHeight(28);
         employeeTable.setFillsViewportHeight(true);
@@ -254,11 +284,12 @@ public class EmployeeView extends JFrame {
     }
     
     private void onEditClicked() {
-        int selectedRow = employeeTable.getSelectedRow();
-        if (selectedRow == -1) {
+        int selectedViewRow = employeeTable.getSelectedRow();
+        if (selectedViewRow == -1) {
             return;
         }
-        Employee employee = tableModel.getEmployeeAt(selectedRow);
+        int modelRow = employeeTable.convertRowIndexToModel(selectedViewRow);
+        Employee employee = tableModel.getEmployeeAt(modelRow);
         enterEditMode(employee);
     }
 
@@ -288,11 +319,12 @@ public class EmployeeView extends JFrame {
     }
 
     private void onDeleteClicked() {
-        int selectedRow = employeeTable.getSelectedRow();
-        if (selectedRow == -1) {
+        int selectedViewRow = employeeTable.getSelectedRow();
+        if (selectedViewRow == -1) {
             return;
         }
-        Employee employee = tableModel.getEmployeeAt(selectedRow);
+        int modelRow = employeeTable.convertRowIndexToModel(selectedViewRow);
+        Employee employee = tableModel.getEmployeeAt(modelRow);
 
         int confirmacao = JOptionPane.showConfirmDialog(this,
                 "Tem certeza que deseja excluir \"" + employee.getName() + "\"? "
@@ -344,6 +376,29 @@ public class EmployeeView extends JFrame {
                 dispose();
             });
         }
+    }
+    
+    private void applyFilter() {
+        String searchText = searchField.getText().trim().toLowerCase();
+        String statusOption = (String) statusFilterCombo.getSelectedItem();
+
+        RowFilter<EmployeeTableModel, Integer> filter = new RowFilter<>() {
+            @Override
+            public boolean include(Entry<? extends EmployeeTableModel, ? extends Integer> entry) {
+                Employee employee = entry.getModel().getEmployeeAt(entry.getIdentifier());
+
+                boolean matchesName = searchText.isEmpty()
+                        || employee.getName().toLowerCase().contains(searchText);
+
+                boolean matchesStatus = "Todos".equals(statusOption)
+                        || ("Ativo".equals(statusOption) && employee.isActive())
+                        || ("Inativo".equals(statusOption) && !employee.isActive());
+
+                return matchesName && matchesStatus;
+            }
+        };
+
+        tableSorter.setRowFilter(filter);
     }
     
 }
