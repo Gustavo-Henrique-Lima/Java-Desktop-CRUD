@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
  */
 public final class Validators {
     
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
+private static final Pattern EMAIL_PATTERN =
+        Pattern.compile("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)*\\.[a-zA-Z]{2,}$");
 
     private static final int PASSWORD_MIN_LENGTH = 8;
     private static final int NAME_MIN_LENGTH = 3;
