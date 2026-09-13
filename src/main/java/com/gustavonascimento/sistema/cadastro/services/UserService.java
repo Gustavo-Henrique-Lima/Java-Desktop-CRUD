@@ -50,10 +50,12 @@ public class UserService {
 
         User user = new User(name.trim(), email.trim().toLowerCase(), passwordHash, salt);
         
-        auditLogService.log(user.getId(), AuditAction.USER_REGISTERED_SUCESS,
-                "Usuário cadastrado: " + user.getEmail());
-                
-        return userDAO.save(user);
+        User savedUser = userDAO.save(user);
+        
+        auditLogService.log(savedUser.getId(), AuditAction.USER_REGISTERED_SUCESS,
+                "Usuário cadastrado: " + savedUser.getEmail());
+
+        return savedUser;
     }
     
 }
